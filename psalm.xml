@@ -14,4 +14,7 @@
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
+    <issueHandlers>
+        <PossiblyUnusedReturnValue errorLevel="info" />
+    </issueHandlers>
 </psalm>

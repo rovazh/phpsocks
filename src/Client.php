@@ -29,43 +29,42 @@ use PhpSocks\Proto\AuthResponse;
  */
 class Client
 {
+    private string $host;
+    private int $port;
     /**
-     * @var array{host: string, port: int, auth?: array{username: string, password: string}}
+     * @var array{username: string, password: string}
      */
-    private array $options;
-    /**
-     * @var array{username: string, password: string}|array
-     */
-    private array $auth;
+    private array $auth = ['username' => '', 'password' => ''];
 
     /**
-     * Initializes a new instance of the Client class with the provided options.
+     * Initializes a new instance of the Client class with the provided configuration.
      *
-     * @param array $options An array of options for configuring the client.
+     * @param array $config An array of configuration for setting up the client.
      *
-     * @throws InvalidArgumentException If the options provided are invalid.
+     * @throws InvalidArgumentException If the configuration provided is invalid.
      */
-    public function __construct(array $options)
+    public function __construct(array $config)
     {
-        if (!isset($options['host'], $options['port'])) {
+        if (!isset($config['host'], $config['port'])) {
             throw new InvalidArgumentException('Missing host and port');
         }
-        if (!is_string($options['host'])) {
+        if (!is_string($config['host'])) {
             throw new InvalidArgumentException('Host must be a string');
         }
-        if (!is_int($options['port'])) {
+        if (!is_int($config['port'])) {
             throw new InvalidArgumentException('Port must be an integer');
         }
 
-        if (isset($options['auth']['username'], $options['auth']['password'])) {
-            if (!is_string($options['auth']['username']) || !is_string($options['auth']['password'])) {
+        if (isset($config['auth']['username'], $config['auth']['password'])) {
+            if (!is_string($config['auth']['username']) || !is_string($config['auth']['password'])) {
                 throw new InvalidArgumentException('Username and password must be strings');
             }
-            $this->auth['username'] = $options['auth']['username'];
-            $this->auth['password'] = $options['auth']['password'];
+            $this->auth['username'] = $config['auth']['username'];
+            $this->auth['password'] = $config['auth']['password'];
         }
 
-        $this->options = $options;
+        $this->host = $config['host'];
+        $this->port = $config['port'];
     }
 
     /**
@@ -98,14 +97,14 @@ class Client
         }
 
         $conn = new Connection();
-        $conn->establish($this->options['host'], $this->options['port']);
+        $conn->establish($this->host, $this->port);
 
         $connReq = new ConnectRequest(new Buffer(), 0x02);
         $connReq->send($conn);
         $connRes = new ConnectResponse(0x02);
         $connRes->receive($conn);
 
-        if ($this->auth) {
+        if ($this->auth['username'] && $this->auth['password']) {
             $authReq = new AuthRequest(new Buffer(), $this->auth['username'], $this->auth['password']);
             $authReq->send($conn);
             $authRes = new AuthResponse();

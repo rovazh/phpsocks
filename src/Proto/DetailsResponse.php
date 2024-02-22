@@ -29,7 +29,7 @@ final class DetailsResponse implements Response
     private const ADDRESS_TYPE_IPV6 = 0x04;
 
     /**
-     * @var string[]
+     * @var array<int, string>
      */
     public static array $errors = [
         0x01 => 'General SOCKS server failure',
@@ -52,19 +52,6 @@ final class DetailsResponse implements Response
         $ver = $buf->readUInt8(self::VERSION_OCTET_POSITION);
         $reply = $buf->readUInt8(self::REPLY_OCTET_POSITION);
         $reserved = $buf->readUInt8(self::RESERVED_OCTET_POSITION);
-        $addrType = $buf->readUInt8(self::ADDR_TYPE_OCTET_POSITION);
-
-        // Read the remaining bytes to free up the buffer.
-        if (self::ADDRESS_TYPE_DOMAIN_NAME === $addrType) {
-            $length = $buf->readUInt8(self::ADDR_TYPE_OCTET_POSITION + 1);
-            $conn->read($length + 2); // Domain name length + 2 bytes representing a port
-        } elseif (self::ADDRESS_TYPE_IPV4 === $addrType) {
-            $conn->read(6); // IPv4 length + 2 bytes representing a port.
-        } elseif(self::ADDRESS_TYPE_IPV6 === $addrType) {
-            $conn->read(18); // IPv6 length + 2 bytes representing a port.
-        } else {
-            throw new PhpSocksException('Address type returned by the SOCKS5 server is invalid');
-        }
 
         if (self::VERSION !== $ver) {
             throw new PhpSocksException('Invalid version');
@@ -79,6 +66,19 @@ final class DetailsResponse implements Response
         }
         if (self::RESERVED_OCTET !== $reserved) {
             throw new PhpSocksException('Invalid reserved octet');
+        }
+
+        $addrType = $buf->readUInt8(self::ADDR_TYPE_OCTET_POSITION);
+        // Read the remaining bytes to free up the buffer.
+        if (self::ADDRESS_TYPE_DOMAIN_NAME === $addrType) {
+            $length = $conn->read(1)->readUInt8(0); // Domain name length
+            $conn->read($length + 2); // Domain name length + 2 bytes representing a port
+        } elseif (self::ADDRESS_TYPE_IPV4 === $addrType) {
+            $conn->read(6); // IPv4 length + 2 bytes representing a port.
+        } elseif(self::ADDRESS_TYPE_IPV6 === $addrType) {
+            $conn->read(18); // IPv6 length + 2 bytes representing a port.
+        } else {
+            throw new PhpSocksException('Address type returned by the SOCKS5 server is invalid');
         }
     }
 }
