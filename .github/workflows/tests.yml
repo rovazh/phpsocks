@@ -10,15 +10,18 @@ permissions:
   contents: read
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 2
+      matrix:
+        php: [ '7.4', '8.3' ]
 
     steps:
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '7.4'
+        php-version: ${{ matrix.php }}
         ini-values: error_reporting=E_ALL
         coverage: none
 
