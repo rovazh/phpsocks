@@ -12,9 +12,8 @@ declare(strict_types=1);
 
 namespace PhpSocks;
 
-use InvalidArgumentException;
+use PhpSocks\Exception\InvalidArgumentException;
 use PhpSocks\Exception\PhpSocksException;
-use RuntimeException;
 
 /**
  * @internal
@@ -40,8 +39,7 @@ class Buffer
     }
 
     /**
-     * @throws InvalidArgumentException
-     * @throws RuntimeException
+     * @throws InvalidArgumentException|PhpSocksException
      */
     public function writeUInt8(int $char): self
     {
@@ -53,8 +51,7 @@ class Buffer
     }
 
     /**
-     * @throws InvalidArgumentException
-     * @throws RuntimeException
+     * @throws InvalidArgumentException|PhpSocksException
      */
     public function writeUInt16(int $value): self
     {
@@ -78,10 +75,13 @@ class Buffer
         return $content;
     }
 
+    /**
+     * @throws PhpSocksException
+     */
     private function pack(int $val, string $type): string
     {
         if (false === ($packedVal = @pack($type, $val))) {
-            throw new RuntimeException('Failed to pack value');
+            throw new PhpSocksException('Failed to pack value');
         }
         return $packedVal;
     }

@@ -12,8 +12,9 @@ declare(strict_types=1);
 
 namespace PhpSocks\Proto;
 
-use PhpSocks\Connection;
+use PhpSocks\Buffer;
 use PhpSocks\Exception\PhpSocksException;
+use PhpSocks\Stream;
 
 final class DetailsResponse implements Response
 {
@@ -45,9 +46,9 @@ final class DetailsResponse implements Response
     /**
      * {@inheritDoc}
      */
-    public function receive(Connection $conn): void
+    public function receive(Stream $stream): void
     {
-        $buf = $conn->read(4);
+        $buf = new Buffer($stream->read(4));
 
         $ver = $buf->readUInt8(self::VERSION_OCTET_POSITION);
         $reply = $buf->readUInt8(self::REPLY_OCTET_POSITION);
@@ -71,12 +72,12 @@ final class DetailsResponse implements Response
         $addrType = $buf->readUInt8(self::ADDR_TYPE_OCTET_POSITION);
         // Read the remaining bytes to free up the buffer.
         if (self::ADDRESS_TYPE_DOMAIN_NAME === $addrType) {
-            $length = $conn->read(1)->readUInt8(0); // Domain name length
-            $conn->read($length + 2); // Domain name length + 2 bytes representing a port
+            $length = (new Buffer($stream->read(1)))->readUInt8(0); // Domain name length
+            $stream->read($length + 2); // Domain name length + 2 bytes representing a port
         } elseif (self::ADDRESS_TYPE_IPV4 === $addrType) {
-            $conn->read(6); // IPv4 length + 2 bytes representing a port.
-        } elseif(self::ADDRESS_TYPE_IPV6 === $addrType) {
-            $conn->read(18); // IPv6 length + 2 bytes representing a port.
+            $stream->read(6); // IPv4 length + 2 bytes representing a port.
+        } elseif (self::ADDRESS_TYPE_IPV6 === $addrType) {
+            $stream->read(18); // IPv6 length + 2 bytes representing a port.
         } else {
             throw new PhpSocksException('Address type returned by the SOCKS5 server is invalid');
         }

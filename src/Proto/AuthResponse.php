@@ -12,8 +12,9 @@ declare(strict_types=1);
 
 namespace PhpSocks\Proto;
 
-use PhpSocks\Connection;
+use PhpSocks\Buffer;
 use PhpSocks\Exception\PhpSocksException;
+use PhpSocks\Stream;
 
 final class AuthResponse implements Response
 {
@@ -21,14 +22,13 @@ final class AuthResponse implements Response
     private const STATUS_OCTET_POSITION = 1;
     private const VERSION = 0x01;
     private const STATUS_SUCCESS = 0x00;
-    private const BYTES_TO_READ = 2;
 
     /**
      * {@inheritDoc}
      */
-    public function receive(Connection $conn): void
+    public function receive(Stream $stream): void
     {
-        $buf = $conn->read(self::BYTES_TO_READ);
+        $buf = new Buffer($stream->read(2));
         $ver = $buf->readUInt8(self::VERSION_OCTET_POSITION);
         $status = $buf->readUInt8(self::STATUS_OCTET_POSITION);
 

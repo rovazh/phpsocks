@@ -13,8 +13,8 @@ declare(strict_types=1);
 namespace PhpSocks\Proto;
 
 use PhpSocks\Buffer;
-use PhpSocks\Connection;
 use PhpSocks\Exception\PhpSocksException;
+use PhpSocks\Stream;
 
 final class DetailsRequest implements Request
 {
@@ -39,7 +39,7 @@ final class DetailsRequest implements Request
     /**
      * {@inheritDoc}
      */
-    public function send(Connection $conn): void
+    public function send(Stream $stream): void
     {
         $this->buf
             ->writeUInt8(self::VERSION)
@@ -65,6 +65,6 @@ final class DetailsRequest implements Request
         }
 
         $this->buf->writeUInt16($this->port);
-        $conn->write($this->buf);
+        $stream->write($this->buf->flush());
     }
 }

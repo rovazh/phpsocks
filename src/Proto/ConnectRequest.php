@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace PhpSocks\Proto;
 
 use PhpSocks\Buffer;
-use PhpSocks\Connection;
+use PhpSocks\Stream;
 
 /**
  * @internal
@@ -22,15 +22,10 @@ final class ConnectRequest implements Request
 {
     private const VERSION = 0x05;
     private const NUMBER_OF_METHODS = 0x01;
-    private const NO_AUTH = 0x00;
-    private const USERNAME_PASSWORD_AUTH = 0x02;
 
     private Buffer $buf;
     private int $authMethod;
 
-    /**
-     * @param self::NO_AUTH|self::USERNAME_PASSWORD_AUTH $authMethod the authentication method.
-     */
     public function __construct(Buffer $buf, int $authMethod)
     {
         $this->buf = $buf;
@@ -40,12 +35,12 @@ final class ConnectRequest implements Request
     /**
      * {@inheritDoc}
      */
-    public function send(Connection $conn): void
+    public function send(Stream $stream): void
     {
         $this->buf
             ->writeUInt8(self::VERSION)
             ->writeUInt8(self::NUMBER_OF_METHODS)
             ->writeUInt8($this->authMethod);
-        $conn->write($this->buf);
+        $stream->write($this->buf->flush());
     }
 }

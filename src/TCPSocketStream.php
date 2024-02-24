@@ -13,7 +13,6 @@ declare(strict_types=1);
 namespace PhpSocks;
 
 use PhpSocks\Exception\PhpSocksException;
-use RuntimeException;
 
 /**
  * @internal
@@ -92,7 +91,6 @@ final class TCPSocketStream implements Stream
      * @param array<string, string|bool|int|array> $options
      *
      * @throws PhpSocksException
-     * @throws RuntimeException
      */
     public function enableEncryption(array $options): void
     {
@@ -100,12 +98,10 @@ final class TCPSocketStream implements Stream
             throw new PhpSocksException('Inoperable socket');
         }
         foreach ($options as $option => $value) {
-            if (!stream_context_set_option($this->sock, 'ssl', $option, $value)) {
-                throw new RuntimeException('Failed to set tls option ' . $option);
-            }
+            stream_context_set_option($this->sock, 'ssl', $option, $value);
         }
         set_error_handler(static function ($_, $err) {
-            throw new PhpSocksException($err);
+            throw new PhpSocksException(str_replace('stream_socket_enable_crypto(): ', '', $err));
         });
         stream_socket_enable_crypto($this->sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
         restore_error_handler();

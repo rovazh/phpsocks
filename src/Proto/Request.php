@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 namespace PhpSocks\Proto;
 
-use PhpSocks\Connection;
 use PhpSocks\Exception\PhpSocksException;
+use PhpSocks\Stream;
 
 /**
  * @internal
@@ -23,5 +23,5 @@ interface Request
     /**
      * @throws PhpSocksException
      */
-    public function send(Connection $conn): void;
+    public function send(Stream $stream): void;
 }

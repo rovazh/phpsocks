@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace PhpSocks;
 
-use InvalidArgumentException;
+use PhpSocks\Exception\InvalidArgumentException;
 use PhpSocks\Exception\PhpSocksException;
 use PhpSocks\Proto\ConnectRequest;
 use PhpSocks\Proto\ConnectResponse;
@@ -29,8 +29,13 @@ use PhpSocks\Proto\AuthResponse;
  */
 class Client
 {
+    private const USERNAME_PASSWORD = 0x02;
+    private const NO_AUTH = 0x00;
+
     private string $host;
     private int $port;
+    private float $connectTimeout = 0;
+    private int $authMethod = self::NO_AUTH;
     /**
      * @var array{username: string, password: string}
      */
@@ -46,19 +51,28 @@ class Client
     public function __construct(array $config)
     {
         if (!isset($config['host'], $config['port'])) {
-            throw new InvalidArgumentException('Missing host and port');
+            throw new InvalidArgumentException('missing host and port');
         }
         if (!is_string($config['host'])) {
-            throw new InvalidArgumentException('Host must be a string');
+            throw new InvalidArgumentException('host must be a string');
         }
         if (!is_int($config['port'])) {
-            throw new InvalidArgumentException('Port must be an integer');
+            throw new InvalidArgumentException('port must be an integer');
         }
-
+        if (isset($config['connect_timeout'])) {
+            if ((is_float($config['connect_timeout']) || is_int($config['connect_timeout']))
+                && $config['connect_timeout'] > 0
+            ) {
+                $this->connectTimeout = (float)$config['connect_timeout'];
+            } else {
+                throw new InvalidArgumentException('connect_timeout must be a positive number');
+            }
+        }
         if (isset($config['auth']['username'], $config['auth']['password'])) {
             if (!is_string($config['auth']['username']) || !is_string($config['auth']['password'])) {
-                throw new InvalidArgumentException('Username and password must be strings');
+                throw new InvalidArgumentException('username and password must be strings');
             }
+            $this->authMethod = self::USERNAME_PASSWORD;
             $this->auth['username'] = $config['auth']['username'];
             $this->auth['password'] = $config['auth']['password'];
         }
@@ -96,32 +110,46 @@ class Client
             throw new InvalidArgumentException('Invalid destination URI: no port');
         }
 
-        $conn = new Connection();
-        $conn->establish($this->host, $this->port);
+        $stream = $this->connectToSocks();
 
-        $connReq = new ConnectRequest(new Buffer(), 0x02);
-        $connReq->send($conn);
-        $connRes = new ConnectResponse(0x02);
-        $connRes->receive($conn);
+        $connReq = new ConnectRequest(new Buffer(), $this->authMethod);
+        $connReq->send($stream);
+        $connRes = new ConnectResponse($this->authMethod);
+        $connRes->receive($stream);
 
-        if ($this->auth['username'] && $this->auth['password']) {
+        if (self::USERNAME_PASSWORD === $this->authMethod) {
             $authReq = new AuthRequest(new Buffer(), $this->auth['username'], $this->auth['password']);
-            $authReq->send($conn);
+            $authReq->send($stream);
             $authRes = new AuthResponse();
-            $authRes->receive($conn);
+            $authRes->receive($stream);
         }
 
         $detailsReq = new DetailsRequest(new Buffer(), $uriParts['host'], $uriParts['port']);
-        $detailsReq->send($conn);
+        $detailsReq->send($stream);
         $detailsRes = new DetailsResponse();
-        $detailsRes->receive($conn);
-
-        $stream = $conn->stream();
+        $detailsRes->receive($stream);
 
         if ($uriParts['scheme'] === 'tls') {
             $stream->enableEncryption($options['tls'] ?? []);
         }
 
         return $stream;
+    }
+
+    /**
+     * @throws PhpSocksException
+     */
+    private function connectToSocks(): TCPSocketStream
+    {
+        $addr = 'tcp://' . $this->host . ':' . $this->port;
+        if ($this->connectTimeout) {
+            $sock = @stream_socket_client($addr, $_, $err, $this->connectTimeout);
+        } else {
+            $sock = @stream_socket_client($addr, $_, $err);
+        }
+        if (!$sock) {
+            throw new PhpSocksException('Failed to connect to the SOCKS5 server: ' . $err);
+        }
+        return new TCPSocketStream($sock);
     }
 }

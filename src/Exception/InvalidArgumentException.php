@@ -10,18 +10,9 @@
  */
 declare(strict_types=1);
 
-namespace PhpSocks\Proto;
+namespace PhpSocks\Exception;
 
-use PhpSocks\Exception\PhpSocksException;
-use PhpSocks\Stream;
-
-/**
- * @internal
- */
-interface Response
+final class InvalidArgumentException extends \InvalidArgumentException
 {
-    /**
-     * @throws PhpSocksException
-     */
-    public function receive(Stream $stream): void;
+    //
 }

@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace PhpSocks\Proto;
 
 use PhpSocks\Buffer;
-use PhpSocks\Connection;
+use PhpSocks\Stream;
 
 /**
  * @internal
@@ -36,13 +36,13 @@ final class AuthRequest implements Request
     /**
      * {@inheritDoc}
      */
-    public function send(Connection $conn): void
+    public function send(Stream $stream): void
     {
         $this->buf->writeUInt8(self::VERSION)
             ->writeUInt8(strlen($this->username))
             ->writeString($this->username)
             ->writeUInt8(strlen($this->password))
             ->writeString($this->password);
-        $conn->write($this->buf);
+        $stream->write($this->buf->flush());
     }
 }
