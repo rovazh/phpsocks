@@ -44,7 +44,7 @@ class Buffer
     public function writeUInt8(int $char): self
     {
         if ($char < 0 || $char > 255) {
-            throw new InvalidArgumentException('Value is out of range');
+            throw new InvalidArgumentException('Value exceeds uint8 range (0-255)');
         }
         $this->buf .= $this->pack($char, self::UNSIGNED_CHAR);
         return $this;
@@ -56,7 +56,7 @@ class Buffer
     public function writeUInt16(int $value): self
     {
         if ($value < 0 || $value > 65535) {
-            throw new InvalidArgumentException('Value is out of range');
+            throw new InvalidArgumentException('Value exceeds uint16 range (0-65535)');
         }
         $this->buf .= $this->pack($value, self::UNSIGNED_SHORT);
         return $this;
@@ -93,7 +93,7 @@ class Buffer
     {
         $unpacked = @unpack($type, $this->buf, $offset);
         if (($unpacked === false) || !is_int($byte = $unpacked[1])) {
-            throw new PhpSocksException('Offset is out of range');
+            throw new PhpSocksException('Offset is out of buffer bounds');
         }
         return $byte;
     }

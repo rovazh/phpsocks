@@ -57,7 +57,7 @@ final class DetailsResponse implements Response
         if (self::VERSION !== $ver) {
             throw new PhpSocksException('Invalid version');
         }
-        if (self::SUCCESS !== 0) {
+        if (self::SUCCESS !== $reply) {
             if (false === array_key_exists($reply, self::$errors)) {
                 $err = 'General SOCKS server failure';
             } else {

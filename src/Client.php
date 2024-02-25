@@ -60,7 +60,8 @@ class Client
             throw new InvalidArgumentException('port must be an integer');
         }
         if (isset($config['connect_timeout'])) {
-            if ((is_float($config['connect_timeout']) || is_int($config['connect_timeout']))
+            if (
+                (is_float($config['connect_timeout']) || is_int($config['connect_timeout']))
                 && $config['connect_timeout'] > 0
             ) {
                 $this->connectTimeout = (float)$config['connect_timeout'];

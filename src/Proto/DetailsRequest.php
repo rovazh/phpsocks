@@ -47,7 +47,7 @@ final class DetailsRequest implements Request
             ->writeUInt8(self::RESERVED_OCTET);
 
         $host = @inet_pton($this->host);
-        if (false === $host) {
+        if (false === $host && false !== filter_var($this->host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
             $this->buf
                 ->writeUInt8(self::ADDRESS_TYPE_DOMAIN_NAME)
                 ->writeUInt8(strlen($this->host))

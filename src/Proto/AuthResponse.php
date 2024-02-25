@@ -33,9 +33,7 @@ final class AuthResponse implements Response
         $status = $buf->readUInt8(self::STATUS_OCTET_POSITION);
 
         if (self::VERSION !== $ver) {
-            throw new PhpSocksException(
-                sprintf('Version is invalid: expected %d, got %d', self::VERSION, $ver)
-            );
+            throw new PhpSocksException('Invalid version');
         }
         if (self::STATUS_SUCCESS !== $status) {
             throw new PhpSocksException('Authentication failed');
