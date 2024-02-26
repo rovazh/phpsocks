@@ -41,6 +41,9 @@ final class TCPSocketStream implements Stream
             throw new PhpSocksException('Inoperable socket');
         }
         $data = stream_get_contents($this->sock);
+        if (@stream_get_meta_data($this->sock)['timed_out']) {
+            throw new PhpSocksException('Timed out when reading from the stream');
+        }
         if (false === $data) {
             throw new PhpSocksException('Failed to read from the stream');
         }
@@ -56,6 +59,9 @@ final class TCPSocketStream implements Stream
             throw new PhpSocksException('Inoperable socket');
         }
         $data = fread($this->sock, $length);
+        if (@stream_get_meta_data($this->sock)['timed_out']) {
+            throw new PhpSocksException('Timed out when reading from the stream');
+        }
         if (false === $data) {
             throw new PhpSocksException('Failed to read from the stream');
         }
@@ -71,6 +77,9 @@ final class TCPSocketStream implements Stream
             throw new PhpSocksException('Inoperable socket');
         }
         $bytesWritten = fwrite($this->sock, $data);
+        if (@stream_get_meta_data($this->sock)['timed_out']) {
+            throw new PhpSocksException('Timed out when writing to the stream');
+        }
         if (false === $bytesWritten) {
             throw new PhpSocksException('Failed to write to the stream');
         }

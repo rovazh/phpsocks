@@ -40,6 +40,7 @@ class Client
      * @var array{username: string, password: string}
      */
     private array $auth = ['username' => '', 'password' => ''];
+    private int $timeout = 0;
 
     /**
      * Initializes a new instance of the Client class with the provided configuration.
@@ -80,6 +81,14 @@ class Client
 
         $this->host = $config['host'];
         $this->port = $config['port'];
+
+        if (isset($config['timeout'])) {
+            if (is_int($config['timeout']) && $config['timeout'] > 0) {
+                $this->timeout = $config['timeout'];
+            } else {
+                throw new InvalidArgumentException('timeout must be a positive integer');
+            }
+        }
     }
 
     /**
@@ -149,7 +158,12 @@ class Client
             $sock = @stream_socket_client($addr, $_, $err);
         }
         if (!$sock) {
-            throw new PhpSocksException('Failed to connect to the SOCKS5 server: ' . $err);
+            throw new PhpSocksException('Failed to connect to the SOCKS server: ' . $err);
+        }
+        if ($this->timeout) {
+            if (!@stream_set_timeout($sock, $this->timeout)) {
+                throw new PhpSocksException('Failed to set timeout period on the stream');
+            }
         }
         return new TCPSocketStream($sock);
     }
