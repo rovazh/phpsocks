@@ -1,6 +1,6 @@
 {
-    "name": "phpsocks/phpsocks",
-    "description": "The PHP SOCKS client",
+    "name": "rovazh/phpsocks",
+    "description": "SOCKS5 proxy client, written in pure PHP with zero dependencies.",
     "type": "library",
     "license": "MIT",
     "keywords": ["socks", "socks5", "php socks", "php socks5", "php proxy", "proxy client", "socks client"],
