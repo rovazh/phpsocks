@@ -18,9 +18,6 @@ use PhpSocks\Exception\PhpSocksException;
 use PhpSocks\Proto\AuthResponse;
 use PhpSocks\Stream;
 
-/**
- * @internal
- */
 final class AuthResponseTest extends TestCase
 {
     /**

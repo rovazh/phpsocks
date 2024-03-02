@@ -28,6 +28,20 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Echo secrets
+      env:
+        KEY: ${{ secrets.TEST_KEY }}
+        CRT: ${{ secrets.TEST_CRT }}
+        CA: ${{ secrets.TEST_CA }}
+      shell: bash
+      run: |
+        echo $KEY | base64 --decode > ./tests/ping-pong-server/test.key
+        echo $CRT | base64 --decode > ./tests/ping-pong-server/test.crt
+        echo $CA | base64 --decode > ./tests/ping-pong-server/testCA.pem
+
+    - name: Start containers
+      run: docker compose -f "docker-compose.yml" up --quiet-pull --build -d
+
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
 
@@ -36,3 +50,7 @@ jobs:
 
     - name: Run tests
       run: ./vendor/bin/phpunit
+
+    - name: Stop containers
+      if: always()
+      run: docker compose -f "docker-compose.yml" down

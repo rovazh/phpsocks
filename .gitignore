@@ -2,3 +2,8 @@
 /composer.lock
 /.idea
 /.phpunit.result.cache
+/tests/ping-pong-server/*key
+/tests/ping-pong-server/*crt
+/tests/ping-pong-server/*pem
+/coverage
+/coverage-report

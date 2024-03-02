@@ -18,9 +18,6 @@ use PhpSocks\Buffer;
 use PhpSocks\Proto\ConnectRequest;
 use PhpSocks\Stream;
 
-/**
- * @internal
- */
 final class ConnectRequestTest extends TestCase
 {
     /**

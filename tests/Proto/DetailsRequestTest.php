@@ -19,9 +19,6 @@ use PhpSocks\Exception\PhpSocksException;
 use PhpSocks\Proto\DetailsRequest;
 use PhpSocks\Stream;
 
-/**
- * @internal
- */
 final class DetailsRequestTest extends TestCase
 {
     /**
