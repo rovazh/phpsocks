@@ -18,9 +18,6 @@ use PhpSocks\Exception\PhpSocksException;
 use PhpSocks\Proto\ConnectResponse;
 use PhpSocks\Stream;
 
-/**
- * @internal
- */
 final class ConnectResponseTest extends TestCase
 {
     /**

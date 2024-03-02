@@ -18,9 +18,6 @@ use PhpSocks\Exception\PhpSocksException;
 use PhpSocks\Proto\DetailsResponse;
 use PhpSocks\Stream;
 
-/**
- * @internal
- */
 final class DetailsResponseTest extends TestCase
 {
     /**

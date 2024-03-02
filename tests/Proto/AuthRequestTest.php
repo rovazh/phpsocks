@@ -18,9 +18,6 @@ use PhpSocks\Buffer;
 use PhpSocks\Proto\AuthRequest;
 use PhpSocks\Stream;
 
-/**
- * @internal
- */
 final class AuthRequestTest extends TestCase
 {
     /**

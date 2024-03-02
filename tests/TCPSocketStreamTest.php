@@ -16,9 +16,6 @@ use PhpSocks\Exception\PhpSocksException;
 use PhpSocks\TCPSocketStream;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @internal
- */
 final class TCPSocketStreamTest extends TestCase
 {
     /**
