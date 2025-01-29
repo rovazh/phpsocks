@@ -25,8 +25,8 @@ final class BufferTest extends TestCase
     public function readsUInt8(): void
     {
         $buf = new Buffer(pack('C2', 0x01, 0x02));
-        $this->assertEquals(0x01, $buf->readUInt8(0));
-        $this->assertEquals(0x02, $buf->readUInt8(1));
+        $this->assertEquals(0x01, $buf->readUInt8());
+        $this->assertEquals(0x02, $buf->readUInt8());
     }
 
     /**
@@ -114,9 +114,8 @@ final class BufferTest extends TestCase
     public function throwsExceptionWhenReadingValueThatIsOutOfRange()
     {
         $buf = new Buffer();
-        $buf->writeUInt8(0x01);
         $this->expectException(PhpSocksException::class);
         $this->expectExceptionMessage('Offset is out of buffer bounds');
-        $buf->readUInt8(1);
+        $buf->readUInt8();
     }
 }

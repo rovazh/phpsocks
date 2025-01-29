@@ -33,7 +33,7 @@ final class ClientTest extends TestCase
         ]);
         $stream =  $client->connect('tcp://ping-pong-server:1333');
         $stream->write("ping\n");
-        $this->assertEquals("pong\n", $stream->readAll());
+        $this->assertEquals("pong\n", $stream->read(4));
         $stream->close();
     }
 
@@ -56,7 +56,7 @@ final class ClientTest extends TestCase
             ],
         ]);
         $stream->write("ping\n");
-        $this->assertEquals("pong\n", $stream->readAll());
+        $this->assertEquals("pong\n", $stream->read(4));
         $stream->close();
     }
 }

@@ -24,18 +24,40 @@ class Buffer
     private const UNSIGNED_SHORT = 'n';
 
     private string $buf;
+    private int $size;
+    private int $offset = 0;
 
     public function __construct(string $buf = '')
     {
         $this->buf = $buf;
+        $this->size = strlen($buf);
     }
 
     /**
-     * @throws PhpSocksException when the index is out of range
+     * @throws PhpSocksException when the index is out of range.
      */
-    public function readUInt8(int $offset): int
+    public function readUInt8(): int
     {
-        return $this->unpack($offset, self::UNSIGNED_CHAR);
+        $char = $this->unpack($this->offset, self::UNSIGNED_CHAR);
+        $this->offset++;
+        return $char;
+    }
+
+    /**
+     * @throws PhpSocksException when the index is out of range.
+     */
+    public function readUint16(): int
+    {
+        $uShort = $this->unpack($this->offset, self::UNSIGNED_SHORT);
+        $this->offset += 2;
+        return $uShort;
+    }
+
+    public function readString(int $limit): string
+    {
+        $str = substr($this->buf, $this->offset, $limit);
+        $this->offset += $limit;
+        return $str;
     }
 
     /**
@@ -47,6 +69,7 @@ class Buffer
             throw new InvalidArgumentException('Value exceeds uint8 range (0-255)');
         }
         $this->buf .= $this->pack($char, self::UNSIGNED_CHAR);
+        $this->size++;
         return $this;
     }
 
@@ -59,12 +82,15 @@ class Buffer
             throw new InvalidArgumentException('Value exceeds uint16 range (0-65535)');
         }
         $this->buf .= $this->pack($value, self::UNSIGNED_SHORT);
+        $this->size += 2;
         return $this;
     }
 
     public function writeString(string $value): self
     {
         $this->buf .= $value;
+        $len = strlen($value);
+        $this->size += $len;
         return $this;
     }
 
@@ -72,7 +98,14 @@ class Buffer
     {
         $content = $this->buf;
         $this->buf = '';
+        $this->size = 0;
+        $this->offset = 0;
         return $content;
+    }
+
+    public function getSize(): int
+    {
+        return $this->size;
     }
 
     /**

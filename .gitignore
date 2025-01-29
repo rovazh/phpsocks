@@ -7,3 +7,4 @@
 /tests/ping-pong-server/*pem
 /coverage
 /coverage-report
+/.php-cs-fixer.cache

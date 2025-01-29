@@ -17,7 +17,7 @@ use PhpSocks\Exception\PhpSocksException;
 /**
  * @internal
  */
-final class TCPSocketStream implements Stream
+final class TcpStream implements Stream
 {
     /**
      * @var resource|closed-resource
@@ -33,21 +33,29 @@ final class TCPSocketStream implements Stream
     }
 
     /**
-     * {@inheritDoc}
+     * @param array{timeout?: int, connect_timeout?: float} $options
+     *
+     * @throws PhpSocksException
      */
-    public function readAll(): string
-    {
-        if (!is_resource($this->sock)) {
-            throw new PhpSocksException('Inoperable socket');
+    public static function create(
+        string $addr,
+        int $port,
+        array $options = []
+    ): self {
+        if (isset($options['connect_timeout'])) {
+            $sock = @stream_socket_client('tcp://' . $addr . ':' . $port, $_, $err, $options['connect_timeout']);
+        } else {
+            $sock = @stream_socket_client('tcp://' . $addr . ':' . $port, $_, $err);
         }
-        $data = stream_get_contents($this->sock);
-        if (@stream_get_meta_data($this->sock)['timed_out']) {
-            throw new PhpSocksException('Timed out when reading from the stream');
+        if (!$sock) {
+            throw new PhpSocksException('Failed to connect to the SOCKS server: ' . $err);
         }
-        if (false === $data) {
-            throw new PhpSocksException('Failed to read from the stream');
+        if (isset($options['timeout'])) {
+            if (!@stream_set_timeout($sock, $options['timeout'])) {
+                throw new PhpSocksException('Failed to set timeout on the stream');
+            }
         }
-        return $data;
+        return new TcpStream($sock);
     }
 
     /**
@@ -94,6 +102,17 @@ final class TCPSocketStream implements Stream
         if (is_resource($this->sock)) {
             fclose($this->sock);
         }
+    }
+
+    /**
+     * @throws PhpSocksException
+     */
+    public function eof(): bool
+    {
+        if (!is_resource($this->sock)) {
+            throw new PhpSocksException('Inoperable stream');
+        }
+        return feof($this->sock);
     }
 
     /**

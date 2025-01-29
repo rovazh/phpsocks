@@ -1,9 +1,11 @@
 const net = require('node:net');
 const tls = require('node:tls');
 const fs = require('node:fs');
+const udp = require('node:dgram');
 
 const port = 1333;
 const tlsPort = 1555;
+const udpPort = 1777;
 
 const tlsOpts = {
     key: fs.readFileSync('./test.key'),
@@ -26,22 +28,44 @@ tlsServer.on('listening', () => process.stdout.write("TLS listening on " + tlsPo
 tlsServer.on('error', (err) => {
     throw err;
 });
-tlsServer.listen(tlsPort, '0.0.0.0');
+tlsServer.listen(tlsPort, '127.0.0.1');
 
-const server = net.createServer({}, (socket) => {
+const tcpServer = net.createServer({}, (socket) => {
     const addr = socket.remoteAddress + ':' + socket.remotePort;
     process.stdout.write('connected ' + addr + "\n");
-    socket.on('data', (data) => {
-        if (data.toString('utf-8') === "ping\n") {
-            socket.end("pong\n");
-        } else {
-            socket.end();
-        }
+    socket.on('data', () => {
+        socket.write("pong\n");
+        socket.destroy();
     });
     socket.on('close', () => process.stdout.write('closed ' + addr + "\n"));
 });
-server.on('listening', () => process.stdout.write("listening on " + port + "\n"));
-server.on('error', (err) => {
+tcpServer.on('listening', () => process.stdout.write("TCP listening on " + port + "\n"));
+tcpServer.on('error', (err) => {
     throw err;
 });
-server.listen(port, '0.0.0.0');
+tcpServer.listen(port, '127.0.0.1');
+
+const udpServer = udp.createSocket('udp4');
+udpServer.on('message', (msg, rinfo) => {
+    process.stdout.write("Datagram arrived: " + msg.toString('utf-8') + "\n")
+    udpServer.send('pong', rinfo.port, rinfo.address, (error) => {
+        if (error) {
+            throw error;
+        }
+    });
+    udpServer.send('pong', rinfo.port, rinfo.address, (error) => {
+        if (error) {
+            throw error;
+        }
+    });
+});
+
+udpServer.on('connect', () => console.log('connected'));
+
+udpServer.on('listening', () => {
+    process.stdout.write("UDP listening on " + udpServer.address().port + "\n")
+})
+udpServer.on('error', (err) => {
+    throw err;
+});
+udpServer.bind(udpPort, '127.0.0.1');

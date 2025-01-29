@@ -21,8 +21,6 @@ use PhpSocks\Stream;
  */
 final class ConnectResponse implements Response
 {
-    private const VERSION_OCTET_POSITION = 0;
-    private const AUTH_METHOD_OCTET_POSITION = 1;
     private const VERSION = 0x05;
     private const NO_ACCEPTABLE_METHODS = 0xFF;
 
@@ -39,8 +37,8 @@ final class ConnectResponse implements Response
     public function receive(Stream $stream): void
     {
         $buf = new Buffer($stream->read(2));
-        $ver = $buf->readUInt8(self::VERSION_OCTET_POSITION);
-        $method = $buf->readUInt8(self::AUTH_METHOD_OCTET_POSITION);
+        $ver = $buf->readUInt8();
+        $method = $buf->readUInt8();
 
         if (self::VERSION !== $ver) {
             throw new PhpSocksException('Invalid version');

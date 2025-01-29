@@ -18,10 +18,6 @@ use PhpSocks\Stream;
 
 final class DetailsResponse implements Response
 {
-    private const VERSION_OCTET_POSITION = 0;
-    private const REPLY_OCTET_POSITION = 1;
-    private const RESERVED_OCTET_POSITION = 2;
-    private const ADDR_TYPE_OCTET_POSITION = 3;
     private const VERSION = 0x05;
     private const SUCCESS = 0x00;
     private const RESERVED_OCTET = 0x00;
@@ -42,6 +38,8 @@ final class DetailsResponse implements Response
         0x07 => 'Command not supported',
         0x08 => 'Address type not supported',
     ];
+    private string $bndAddr = '';
+    private int $bndPort = 0;
 
     /**
      * {@inheritDoc}
@@ -50,9 +48,9 @@ final class DetailsResponse implements Response
     {
         $buf = new Buffer($stream->read(4));
 
-        $ver = $buf->readUInt8(self::VERSION_OCTET_POSITION);
-        $reply = $buf->readUInt8(self::REPLY_OCTET_POSITION);
-        $reserved = $buf->readUInt8(self::RESERVED_OCTET_POSITION);
+        $ver = $buf->readUInt8();
+        $reply = $buf->readUInt8();
+        $reserved = $buf->readUInt8();
 
         if (self::VERSION !== $ver) {
             throw new PhpSocksException('Invalid version');
@@ -69,17 +67,37 @@ final class DetailsResponse implements Response
             throw new PhpSocksException('Invalid reserved octet');
         }
 
-        $addrType = $buf->readUInt8(self::ADDR_TYPE_OCTET_POSITION);
-        // Read the remaining bytes to free up the buffer.
+        $addrType = $buf->readUInt8();
         if (self::ADDRESS_TYPE_DOMAIN_NAME === $addrType) {
-            $length = (new Buffer($stream->read(1)))->readUInt8(0); // Domain name length
-            $stream->read($length + 2); // Domain name length + 2 bytes representing a port
+            $length = (new Buffer($stream->read(1)))->readUInt8(); // Domain name length
+            $this->bndAddr = $stream->read($length);
+            $this->bndPort = (new Buffer($stream->read(2)))->readUint16();
         } elseif (self::ADDRESS_TYPE_IPV4 === $addrType) {
-            $stream->read(6); // IPv4 length + 2 bytes representing a port.
+            $bndAddr = @inet_ntop($stream->read(4));
+            if (false === $bndAddr) {
+                throw new PhpSocksException('Invalid BND.ADDR');
+            }
+            $this->bndAddr = $bndAddr;
+            $this->bndPort = (new Buffer($stream->read(2)))->readUint16();
         } elseif (self::ADDRESS_TYPE_IPV6 === $addrType) {
-            $stream->read(18); // IPv6 length + 2 bytes representing a port.
+            $bndAddr = @inet_ntop($stream->read(16));
+            if (false === $bndAddr) {
+                throw new PhpSocksException('Invalid BND.ADDR');
+            }
+            $this->bndAddr = $bndAddr;
+            $this->bndPort = (new Buffer($stream->read(2)))->readUint16();
         } else {
             throw new PhpSocksException('Address type returned by the SOCKS5 server is invalid');
         }
+    }
+
+    public function getBndAddr(): string
+    {
+        return $this->bndAddr;
+    }
+
+    public function getBndPort(): int
+    {
+        return $this->bndPort;
     }
 }

@@ -98,29 +98,17 @@ class Client
      * @param array{tls?: array<string, string|bool|int|array>} $options TLS options for the connection.
      * @return Stream A stream representing the connection to the destination address.
      *
-     * @throws PhpSocksException If an error occurs during the connection to the SOCKS5 server or the destination URI.
+     * @throws PhpSocksException If a connection error occurs with the SOCKS5 server or the destination URI.
      * @throws InvalidArgumentException If the URI or options are invalid.
      */
     public function connect(string $uri, array $options = []): Stream
     {
-        $uriParts = parse_url($uri);
-        if (false === $uriParts) {
-            throw new InvalidArgumentException('Invalid destination URI');
-        }
-        if (!isset($uriParts['scheme'])) {
-            throw new InvalidArgumentException('Invalid destination URI: no scheme');
-        }
-        if (!($uriParts['scheme'] === 'tcp' || $uriParts['scheme'] === 'tls')) {
-            throw new InvalidArgumentException('Invalid destination URI: unexpected scheme');
-        }
-        if (!isset($uriParts['host'])) {
-            throw new InvalidArgumentException('Invalid destination URI: no host');
-        }
-        if (!isset($uriParts['port'])) {
-            throw new InvalidArgumentException('Invalid destination URI: no port');
-        }
+        $uriParts = $this->parseUri($uri, ['tcp', 'tls']);
 
-        $stream = $this->connectToSocks();
+        $stream = TcpStream::create($this->host, $this->port, [
+            'timeout' => $this->timeout,
+            'connect_timeout' => $this->connectTimeout,
+        ]);
 
         $connReq = new ConnectRequest(new Buffer(), $this->authMethod);
         $connReq->send($stream);
@@ -134,7 +122,7 @@ class Client
             $authRes->receive($stream);
         }
 
-        $detailsReq = new DetailsRequest(new Buffer(), $uriParts['host'], $uriParts['port']);
+        $detailsReq = new DetailsRequest(new Buffer(), $uriParts['host'], $uriParts['port'], DetailsRequest::CMD_CONNECT);
         $detailsReq->send($stream);
         $detailsRes = new DetailsResponse();
         $detailsRes->receive($stream);
@@ -147,24 +135,65 @@ class Client
     }
 
     /**
-     * @throws PhpSocksException
+     * Establishes a SOCKS5 UDP association to enable the relay of UDP datagrams to the destination address.
+     *
+     * @param string $uri The URI of the destination to associate with.
+     * @return Stream A stream representing the UDP connection to the destination address.
+     *
+     * @throws PhpSocksException If a connection error occurs with the SOCKS5 server or the destination URI.
+     * @throws InvalidArgumentException If the URI or options are invalid.
      */
-    private function connectToSocks(): TCPSocketStream
+    public function associate(string $uri): Stream
     {
-        $addr = 'tcp://' . $this->host . ':' . $this->port;
-        if ($this->connectTimeout) {
-            $sock = @stream_socket_client($addr, $_, $err, $this->connectTimeout);
-        } else {
-            $sock = @stream_socket_client($addr, $_, $err);
+        $uriParts = $this->parseUri($uri, ['udp']);
+
+        $socksStream = TcpStream::create($this->host, $this->port, [
+            'timeout' => $this->timeout,
+            'connect_timeout' => $this->connectTimeout,
+        ]);
+
+        $connReq = new ConnectRequest(new Buffer(), $this->authMethod);
+        $connReq->send($socksStream);
+        $connRes = new ConnectResponse($this->authMethod);
+        $connRes->receive($socksStream);
+
+        $detailsReq = new DetailsRequest(new Buffer(), '0.0.0.0', 0, DetailsRequest::CMD_ASSOCIATE);
+        $detailsReq->send($socksStream);
+        $detailsRes = new DetailsResponse();
+        $detailsRes->receive($socksStream);
+
+        return DgramStream::create(
+            $socksStream,
+            $detailsRes->getBndAddr(),
+            $detailsRes->getBndPort(),
+            $uriParts['host'],
+            $uriParts['port'],
+        );
+    }
+
+    /**
+     * @return array{fragment?: string, host: string, pass?: string, path?: string, port: int, query?: string, scheme: string, user?: string}
+     *
+     * @throws InvalidArgumentException
+     */
+    private function parseUri(string $uri, array $schemes): array
+    {
+        $uriParts = parse_url($uri);
+        if (false === $uriParts) {
+            throw new InvalidArgumentException('Invalid destination URI');
         }
-        if (!$sock) {
-            throw new PhpSocksException('Failed to connect to the SOCKS server: ' . $err);
+        if (!isset($uriParts['scheme'])) {
+            throw new InvalidArgumentException('Invalid destination URI: no scheme');
         }
-        if ($this->timeout) {
-            if (!@stream_set_timeout($sock, $this->timeout)) {
-                throw new PhpSocksException('Failed to set timeout period on the stream');
-            }
+        if (!in_array($uriParts['scheme'], $schemes, true)) {
+            throw new InvalidArgumentException('Invalid destination URI: unexpected scheme');
         }
-        return new TCPSocketStream($sock);
+        if (!isset($uriParts['host'])) {
+            throw new InvalidArgumentException('Invalid destination URI: no host');
+        }
+        if (!isset($uriParts['port'])) {
+            throw new InvalidArgumentException('Invalid destination URI: no port');
+        }
+        return $uriParts;
     }
 }

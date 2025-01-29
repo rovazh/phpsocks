@@ -18,8 +18,6 @@ use PhpSocks\Stream;
 
 final class AuthResponse implements Response
 {
-    private const VERSION_OCTET_POSITION = 0;
-    private const STATUS_OCTET_POSITION = 1;
     private const VERSION = 0x01;
     private const STATUS_SUCCESS = 0x00;
 
@@ -29,8 +27,8 @@ final class AuthResponse implements Response
     public function receive(Stream $stream): void
     {
         $buf = new Buffer($stream->read(2));
-        $ver = $buf->readUInt8(self::VERSION_OCTET_POSITION);
-        $status = $buf->readUInt8(self::STATUS_OCTET_POSITION);
+        $ver = $buf->readUInt8();
+        $status = $buf->readUInt8();
 
         if (self::VERSION !== $ver) {
             throw new PhpSocksException('Invalid version');

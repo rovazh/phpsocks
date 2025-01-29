@@ -23,15 +23,6 @@ use PhpSocks\Exception\PhpSocksException;
 interface Stream
 {
     /**
-     * Reads the remainder of the stream into a string.
-     *
-     * @return string The read string.
-     *
-     * @throws PhpSocksException If an error occurs while reading from the stream.
-     */
-    public function readAll(): string;
-
-    /**
      * Reads the stream into a string.
      *
      * @param int $length The maximum number of bytes to read.

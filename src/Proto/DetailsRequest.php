@@ -19,6 +19,7 @@ use PhpSocks\Stream;
 final class DetailsRequest implements Request
 {
     public const CMD_CONNECT = 0x01;
+    public const CMD_ASSOCIATE = 0x03;
     private const VERSION = 0x05;
     private const RESERVED_OCTET = 0x00;
     private const ADDRESS_TYPE_DOMAIN_NAME = 0x03;
@@ -28,12 +29,17 @@ final class DetailsRequest implements Request
     private Buffer $buf;
     private string $host;
     private int $port;
+    private int $cmd;
 
-    public function __construct(Buffer $buf, string $host, int $port)
+    /**
+     * @param self::CMD_CONNECT|self::CMD_ASSOCIATE $cmd
+     */
+    public function __construct(Buffer $buf, string $host, int $port, int $cmd)
     {
         $this->buf = $buf;
         $this->host = $host;
         $this->port = $port;
+        $this->cmd = $cmd;
     }
 
     /**
@@ -43,7 +49,7 @@ final class DetailsRequest implements Request
     {
         $this->buf
             ->writeUInt8(self::VERSION)
-            ->writeUInt8(self::CMD_CONNECT)
+            ->writeUInt8($this->cmd)
             ->writeUInt8(self::RESERVED_OCTET);
 
         $host = @inet_pton($this->host);
