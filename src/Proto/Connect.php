@@ -19,28 +19,34 @@ use PhpSocks\Stream;
 /**
  * @internal
  */
-final class ConnectResponse implements Response
+final class Connect
 {
-    private const VERSION_OCTET_POSITION = 0;
-    private const AUTH_METHOD_OCTET_POSITION = 1;
     private const VERSION = 0x05;
+    private const NUMBER_OF_METHODS = 0x01;
     private const NO_ACCEPTABLE_METHODS = 0xFF;
+    private const NO_AUTH = 0x00;
 
-    private int $expectedAuthMethod;
-
-    public function __construct(int $expectedAuthMethod)
+    /**
+     * @throws PhpSocksException
+     */
+    public static function send(Stream $stream, int $authMethod = self::NO_AUTH): void
     {
-        $this->expectedAuthMethod = $expectedAuthMethod;
+        $buf = new Buffer();
+        $buf
+            ->writeUInt8(self::VERSION)
+            ->writeUInt8(self::NUMBER_OF_METHODS)
+            ->writeUInt8($authMethod);
+        $stream->write((string)$buf);
     }
 
     /**
-     * {@inheritDoc}
+     * @throws PhpSocksException
      */
-    public function receive(Stream $stream): void
+    public static function receive(Stream $stream, int $authMethod = self::NO_AUTH): void
     {
         $buf = new Buffer($stream->read(2));
-        $ver = $buf->readUInt8(self::VERSION_OCTET_POSITION);
-        $method = $buf->readUInt8(self::AUTH_METHOD_OCTET_POSITION);
+        $ver = $buf->readUInt8();
+        $method = $buf->readUInt8();
 
         if (self::VERSION !== $ver) {
             throw new PhpSocksException('Invalid version');
@@ -48,9 +54,9 @@ final class ConnectResponse implements Response
         if (self::NO_ACCEPTABLE_METHODS === $method) {
             throw new PhpSocksException('No acceptable methods');
         }
-        if ($this->expectedAuthMethod !== $method) {
+        if ($authMethod !== $method) {
             throw new PhpSocksException(
-                sprintf('Unexpected auth method: expected "%d", got "%d"', $this->expectedAuthMethod, $method)
+                sprintf('Unexpected auth method: expected "%d", got "%d"', $authMethod, $method)
             );
         }
     }

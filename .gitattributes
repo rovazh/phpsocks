@@ -5,3 +5,4 @@
 /.github/ export-ignore
 /phpunit.xml.dist export-ignore
 /docker-compose.yml export-ignore
+/art export-ignore

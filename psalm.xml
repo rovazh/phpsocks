@@ -16,5 +16,6 @@
     </projectFiles>
     <issueHandlers>
         <PossiblyUnusedReturnValue errorLevel="info" />
+        <PossiblyUnusedMethod errorLevel="info" />
     </issueHandlers>
 </psalm>
