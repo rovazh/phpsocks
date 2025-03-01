@@ -13,39 +13,11 @@ declare(strict_types=1);
 namespace PhpSocks\Tests;
 
 use PhpSocks\Exception\PhpSocksException;
-use PhpSocks\TCPSocketStream;
+use PhpSocks\TcpStream;
 use PHPUnit\Framework\TestCase;
 
-final class TCPSocketStreamTest extends TestCase
+final class TcpStreamTest extends TestCase
 {
-    /**
-     * @test
-     */
-    public function readsAll(): void
-    {
-        $sock = fopen('php://memory', 'r+');
-        fwrite($sock, 'Hello World');
-        rewind($sock);
-        $stream = new TCPSocketStream($sock);
-        $this->assertEquals('Hello World', $stream->readAll());
-        fclose($sock);
-    }
-
-    /**
-     * @test
-     */
-    public function throwsExceptionWhenReadingAllFromClosedSocket(): void
-    {
-        $sock = fopen('php://memory', 'r+');
-        fwrite($sock, 'Hello World');
-        rewind($sock);
-        $stream = new TCPSocketStream($sock);
-        fclose($sock);
-        $this->expectException(PhpSocksException::class);
-        $this->expectExceptionMessage('Inoperable socket');
-        $stream->readAll();
-    }
-
     /**
      * @test
      */
@@ -54,7 +26,7 @@ final class TCPSocketStreamTest extends TestCase
         $sock = fopen('php://memory', 'r+');
         fwrite($sock, 'Hello World');
         rewind($sock);
-        $stream = new TCPSocketStream($sock);
+        $stream = new TcpStream($sock);
         $this->assertEquals('Hello', $stream->read(5));
         fclose($sock);
     }
@@ -67,9 +39,9 @@ final class TCPSocketStreamTest extends TestCase
         $sock = fopen('php://memory', 'r+');
         fwrite($sock, 'Hello World');
         rewind($sock);
-        $stream = new TCPSocketStream($sock);
+        $stream = new TcpStream($sock);
         fclose($sock);
-        $this->expectExceptionMessage('Inoperable socket');
+        $this->expectExceptionMessage('Socket is inoperable.');
         $this->expectException(PhpSocksException::class);
         $stream->read(5);
     }
@@ -80,7 +52,7 @@ final class TCPSocketStreamTest extends TestCase
     public function writes(): void
     {
         $sock = fopen('php://memory', 'r+');
-        $stream = new TCPSocketStream($sock);
+        $stream = new TcpStream($sock);
         $this->assertEquals(11, $stream->write('Hello World'));
         rewind($sock);
         $this->assertEquals('Hello World', fread($sock, 11));
@@ -93,10 +65,10 @@ final class TCPSocketStreamTest extends TestCase
     public function throwsExceptionWhenWritingToClosedSocket(): void
     {
         $sock = fopen('php://memory', 'r+');
-        $stream = new TCPSocketStream($sock);
+        $stream = new TcpStream($sock);
         fclose($sock);
         $this->expectException(PhpSocksException::class);
-        $this->expectExceptionMessage('Inoperable socket');
+        $this->expectExceptionMessage('Socket is inoperable.');
         $stream->write('Hello World');
     }
 
@@ -106,7 +78,7 @@ final class TCPSocketStreamTest extends TestCase
     public function closesSocket(): void
     {
         $sock = fopen('php://memory', 'r+');
-        $stream = new TCPSocketStream($sock);
+        $stream = new TcpStream($sock);
         $stream->close();
         $this->assertFalse(is_resource($sock));
     }

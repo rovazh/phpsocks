@@ -17,7 +17,7 @@ use PhpSocks\Exception\PhpSocksException;
 /**
  * @internal
  */
-final class TCPSocketStream implements Stream
+final class TcpStream implements Stream
 {
     /**
      * @var resource|closed-resource
@@ -33,21 +33,29 @@ final class TCPSocketStream implements Stream
     }
 
     /**
-     * {@inheritDoc}
+     * @param array{timeout?: int, connect_timeout?: float} $options
+     *
+     * @throws PhpSocksException
      */
-    public function readAll(): string
-    {
-        if (!is_resource($this->sock)) {
-            throw new PhpSocksException('Inoperable socket');
+    public static function create(
+        string $addr,
+        int $port,
+        array $options = []
+    ): self {
+        if (isset($options['connect_timeout'])) {
+            $sock = @stream_socket_client('tcp://' . $addr . ':' . $port, $_, $err, $options['connect_timeout']);
+        } else {
+            $sock = @stream_socket_client('tcp://' . $addr . ':' . $port, $_, $err);
         }
-        $data = stream_get_contents($this->sock);
-        if (@stream_get_meta_data($this->sock)['timed_out']) {
-            throw new PhpSocksException('Timed out when reading from the stream');
+        if (!$sock) {
+            throw new PhpSocksException('Failed to connect to the SOCKS server: ' . $err);
         }
-        if (false === $data) {
-            throw new PhpSocksException('Failed to read from the stream');
+        if (isset($options['timeout'])) {
+            if (!@stream_set_timeout($sock, $options['timeout'])) {
+                throw new PhpSocksException('Failed to set timeout on the stream.');
+            }
         }
-        return $data;
+        return new TcpStream($sock);
     }
 
     /**
@@ -56,14 +64,14 @@ final class TCPSocketStream implements Stream
     public function read(int $length): string
     {
         if (!is_resource($this->sock)) {
-            throw new PhpSocksException('Inoperable socket');
+            throw new PhpSocksException('Socket is inoperable.');
         }
         $data = fread($this->sock, $length);
         if (@stream_get_meta_data($this->sock)['timed_out']) {
-            throw new PhpSocksException('Timed out when reading from the stream');
+            throw new PhpSocksException('Read operation timed out.');
         }
         if (false === $data) {
-            throw new PhpSocksException('Failed to read from the stream');
+            throw new PhpSocksException('Failed to read from the stream.');
         }
         return $data;
     }
@@ -74,14 +82,14 @@ final class TCPSocketStream implements Stream
     public function write(string $data): int
     {
         if (!is_resource($this->sock)) {
-            throw new PhpSocksException('Inoperable socket');
+            throw new PhpSocksException('Socket is inoperable.');
         }
         $bytesWritten = fwrite($this->sock, $data);
         if (@stream_get_meta_data($this->sock)['timed_out']) {
-            throw new PhpSocksException('Timed out when writing to the stream');
+            throw new PhpSocksException('Write operation timed out.');
         }
         if (false === $bytesWritten) {
-            throw new PhpSocksException('Failed to write to the stream');
+            throw new PhpSocksException('Failed to write to the stream.');
         }
         return $bytesWritten;
     }
@@ -97,6 +105,17 @@ final class TCPSocketStream implements Stream
     }
 
     /**
+     * @throws PhpSocksException
+     */
+    public function eof(): bool
+    {
+        if (!is_resource($this->sock)) {
+            throw new PhpSocksException('Socket is inoperable.');
+        }
+        return feof($this->sock);
+    }
+
+    /**
      * @param array<string, string|bool|int|array> $options
      *
      * @throws PhpSocksException
@@ -104,7 +123,7 @@ final class TCPSocketStream implements Stream
     public function enableEncryption(array $options): void
     {
         if (!is_resource($this->sock)) {
-            throw new PhpSocksException('Inoperable socket');
+            throw new PhpSocksException('Socket is inoperable.');
         }
         foreach ($options as $option => $value) {
             stream_context_set_option($this->sock, 'ssl', $option, $value);
