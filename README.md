@@ -1,4 +1,4 @@
-
+![Guzzle](.github/logo.png?raw=true)
 
 [![Build Status](https://github.com/rovazh/phpsocks/actions/workflows/tests.yml/badge.svg)](https://github.com/rovazh/phpsocks/actions?query=workflow%3ABuild)
 
