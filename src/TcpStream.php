@@ -42,7 +42,7 @@ final class TcpStream implements Stream
         int $port,
         array $options = []
     ): self {
-        if (isset($options['connect_timeout'])) {
+        if (isset($options['connect_timeout']) && $options['connect_timeout'] > 0) {
             $sock = @stream_socket_client('tcp://' . $addr . ':' . $port, $_, $err, $options['connect_timeout']);
         } else {
             $sock = @stream_socket_client('tcp://' . $addr . ':' . $port, $_, $err);
@@ -50,7 +50,7 @@ final class TcpStream implements Stream
         if (!$sock) {
             throw new PhpSocksException('Failed to connect to the SOCKS server: ' . $err);
         }
-        if (isset($options['timeout'])) {
+        if (isset($options['timeout']) && $options['timeout'] > 0) {
             if (!@stream_set_timeout($sock, $options['timeout'])) {
                 throw new PhpSocksException('Failed to set timeout on the stream.');
             }
@@ -120,10 +120,13 @@ final class TcpStream implements Stream
      *
      * @throws PhpSocksException
      */
-    public function enableEncryption(array $options): void
+    public function enableEncryption(array $options, string $peerName = ''): void
     {
         if (!is_resource($this->sock)) {
             throw new PhpSocksException('Socket is inoperable.');
+        }
+        if (!in_array('peer_name', $options, true)) {
+            stream_context_set_option($this->sock, 'ssl', 'peer_name', $peerName);
         }
         foreach ($options as $option => $value) {
             stream_context_set_option($this->sock, 'ssl', $option, $value);

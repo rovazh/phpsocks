@@ -1,4 +1,4 @@
-<img src=".github/logo.png?raw=true" alt="phpSocks" width="400">
+PhpSocks
 
 [![Build Status](https://github.com/rovazh/phpsocks/actions/workflows/tests.yml/badge.svg)](https://github.com/rovazh/phpsocks/actions?query=workflow%3ABuild)
 
@@ -58,9 +58,28 @@ $client = new \PhpSocks\Client([
 ]);
 
 try {
+    $stream = $client->connect('tls://example.net:443');
+    $stream->write("GET / HTTP/1.0\r\n\r\n");
+    echo $stream->read(1024);
+    $stream->close();
+} catch (\PhpSocks\Exception\PhpSocksException $e) {
+    // Handle exception
+}
+```
+
+The connect method accepts an associative array of [SSL context options](https://www.php.net/manual/en/context.ssl.php) that can be used to
+configure TLS settings when connecting to a destination host.
+
+```php
+$client = new \PhpSocks\Client([
+    'host' => '127.0.0.1',
+    'port' => 1080,
+]);
+
+try {
     $stream = $client->connect('tls://example.net:443', [
         'tls' => [
-            'peer_name' => 'example.net',
+            'verify_peer' => false,
         ]
     ]);
     $stream->write("GET / HTTP/1.0\r\n\r\n");
@@ -70,6 +89,8 @@ try {
     // Handle exception
 }
 ```
+
+> Note: SSL context options have no effect when using a plain TCP connection (tcp://).
 
 The connect method accepts an associative array of SSL context options that can be used to
 configure TLS settings when connecting to a destination host.

@@ -29,12 +29,11 @@ class Client
     private string $host;
     private int $port;
     private float $connectTimeout = 0;
-
+    private int $timeout = 0;
     /**
      * @var array{username: string, password: string}
      */
     private array $auth = ['username' => '', 'password' => ''];
-    private int $timeout = 0;
 
     /**
      * Initializes a new instance of the Client class with the provided configuration.
@@ -116,7 +115,7 @@ class Client
         Details::receive($stream);
 
         if ($uriParts['scheme'] === 'tls') {
-            $stream->enableEncryption($options['tls'] ?? []);
+            $stream->enableEncryption($options['tls'] ?? [], $uriParts['host']);
         }
 
         return $stream;

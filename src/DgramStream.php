@@ -59,7 +59,7 @@ final class DgramStream implements Stream
         if (!$socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP)) {
             throw new PhpSocksException('Failed to create socket: ' . socket_strerror(socket_last_error()));
         }
-        if (isset($options['timeout'])) {
+        if (isset($options['timeout']) && $options['timeout'] > 0) {
             if (!socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, ['sec' => $options['timeout'], 'usec' => 0])) {
                 throw new PhpSocksException('Failed to set receive timeout: ' . socket_strerror(socket_last_error()));
             }
