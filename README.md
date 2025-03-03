@@ -1,6 +1,7 @@
-PhpSocks
+# PhpSocks
 
-[![Build Status](https://github.com/rovazh/phpsocks/actions/workflows/tests.yml/badge.svg)](https://github.com/rovazh/phpsocks/actions?query=workflow%3ABuild)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/rovazh/phpsocks/tests.yml)
+![GitHub Release](https://img.shields.io/github/v/release/rovazh/phpsocks)
 
 SOCKS5 proxy client, written in pure PHP with zero dependencies.
 
