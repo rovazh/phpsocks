@@ -91,8 +91,6 @@ try {
 }
 ```
 
-> Note: SSL context options have no effect when using a plain TCP connection (tcp://).
-
 The connect method accepts an associative array of SSL context options that can be used to
 configure TLS settings when connecting to a destination host.
 
