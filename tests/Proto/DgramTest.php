@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace PhpSocks\Tests\Proto;
 
 use Mockery\Adapter\Phpunit\MockeryTestCase as TestCase;
+use PhpSocks\Buffer;
 use PhpSocks\Proto\Dgram;
 
 final class DgramTest extends TestCase
@@ -47,6 +48,49 @@ final class DgramTest extends TestCase
         $this->assertEquals(
             "\x00\x00\x00\x03\x09localhost\x00\x50Hello",
             (string)Dgram::prep('localhost', 80, 'Hello')
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function parsesResponseWithDomainName(): void
+    {
+        $this->assertEquals(
+            "Hello",
+            Dgram::parse(new Buffer("\x00\x00\x00\x03\x09localhost\x00\x50Hello"), 5)
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function parsesResponseWithWithIPv6(): void
+    {
+        $this->assertEquals(
+            "Hello",
+            Dgram::parse(
+                new Buffer(
+                    "\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x50Hello"
+                ),
+                5
+            )
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function parsesResponseWithWithIPv4(): void
+    {
+        $this->assertEquals(
+            "Hello",
+            Dgram::parse(
+                new Buffer(
+                    "\x00\x00\x00\x01\x7f\x00\x00\x01\x00\x50Hello"
+                ),
+                5
+            )
         );
     }
 }
