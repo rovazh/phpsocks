@@ -147,7 +147,7 @@ $client = new \PhpSocks\Client([
 ]);
 
 try {
-    $stream = $client->associate('udp://example.com:5023');
+    $stream = $client->associate('udp://example.net:5023');
     $stream->write("Hello");
     echo $stream->read(1024);
     $stream->close();
