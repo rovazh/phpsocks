@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/logo.png" alt="PhpSocks Logo" height="100">
+</p>
+
 # PhpSocks
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/rovazh/phpsocks/tests.yml)
