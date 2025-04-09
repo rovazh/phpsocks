@@ -1,6 +1,4 @@
-<p align="center">
-  <img src=".github/logo.png" alt="PhpSocks Logo" height="100">
-</p>
+<img src=".github/logo.png" alt="PhpSocks Logo" height="150">
 
 # PhpSocks
 
