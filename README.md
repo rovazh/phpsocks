@@ -40,7 +40,7 @@ $client = new \PhpSocks\Client([
 ]);
 
 try {
-    $stream = $client->connect('tcp://example.com:80');
+    $stream = $client->connect('tcp://example.net:80');
     $stream->write("GET / HTTP/1.0\r\n\r\n");
     echo $stream->read(1024);
     $stream->close();
