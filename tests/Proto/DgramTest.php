@@ -65,7 +65,7 @@ final class DgramTest extends TestCase
     /**
      * @test
      */
-    public function parsesResponseWithWithIPv6(): void
+    public function parsesResponseWithIPv6(): void
     {
         $this->assertEquals(
             "Hello",
@@ -81,7 +81,7 @@ final class DgramTest extends TestCase
     /**
      * @test
      */
-    public function parsesResponseWithWithIPv4(): void
+    public function parsesResponseWithIPv4(): void
     {
         $this->assertEquals(
             "Hello",
