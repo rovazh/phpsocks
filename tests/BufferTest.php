@@ -17,9 +17,6 @@ use PhpSocks\Buffer;
 use PhpSocks\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @internal
- */
 final class BufferTest extends TestCase
 {
     /**
