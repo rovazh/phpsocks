@@ -10,29 +10,25 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  tests:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 2
-      matrix:
-        php: [ '7.4', '8.3' ]
 
     steps:
-    - name: Set up PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: ${{ matrix.php }}
-        ini-values: error_reporting=E_ALL
-        coverage: none
-
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate --strict
+    - name: Start Docker services
+      run: docker compose up -d
 
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-interaction --no-progress
+    - name: Wait for services to be ready
+      run: sleep 5
 
-    - name: Run tests
-      run: ./vendor/bin/phpunit
+    - name: Run tests on PHP 7.4
+      run: docker compose run phpcli php ./vendor/bin/phpunit --coverage-text
+
+    - name: Run tests on PHP 8.3
+      run: docker compose run phpcli-latest ./vendor/bin/phpunit --coverage-text
+
+    - name: Stop Docker services
+      run: docker compose down
+      if: always()

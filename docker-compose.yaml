@@ -1,0 +1,35 @@
+networks:
+  appnet:
+    driver: bridge
+    name: appnet
+services:
+  dante:
+    image: wernight/dante
+    container_name: dante
+    networks:
+      - appnet
+    restart: unless-stopped
+  phpcli:
+    build:
+      context: .
+      dockerfile: ./.docker/php-cli/Dockerfile
+    container_name: phpcli
+    networks:
+      - appnet
+    command: ["php", "-v"]
+  phpcli-latest:
+    build:
+      context: .
+      dockerfile: ./.docker/php-cli-latest/Dockerfile
+    container_name: phpcli-latest
+    networks:
+      - appnet
+    command: ["php", "-v"]
+  node-pingpong:
+    build:
+      context: ./.docker/node-pingpong
+      dockerfile: Dockerfile
+    container_name: node-pingpong
+    networks:
+      - appnet
+    restart: unless-stopped

@@ -10,7 +10,7 @@
  */
 declare(strict_types=1);
 
-namespace PhpSocks\Tests;
+namespace PhpSocks\Tests\Unit;
 
 use InvalidArgumentException;
 use PhpSocks\Client;
