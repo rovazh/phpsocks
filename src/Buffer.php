@@ -21,7 +21,9 @@ use PhpSocks\Exception\PhpSocksException;
  */
 class Buffer
 {
+    /** @psalm-suppress MissingClassConstType */
     private const UNSIGNED_CHAR = 'C';
+    /** @psalm-suppress MissingClassConstType */
     private const UNSIGNED_SHORT = 'n';
 
     private string $buf;
@@ -121,6 +123,7 @@ class Buffer
      */
     private function pack(int $val, string $type): string
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         if (false === ($packedVal = @pack($type, $val))) {
             throw new PhpSocksException('Failed to pack the given value.');
         }

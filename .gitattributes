@@ -4,5 +4,5 @@
 /tests export-ignore
 /.github/ export-ignore
 /phpunit.xml.dist export-ignore
-/docker-compose.yml export-ignore
-/art export-ignore
+/docker-compose.yaml export-ignore
+/.docker export-ignore

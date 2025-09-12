@@ -10,7 +10,7 @@
  */
 declare(strict_types=1);
 
-namespace PhpSocks\Tests\Proto;
+namespace PhpSocks\Tests\Unit\Proto;
 
 use Mockery\Adapter\Phpunit\MockeryTestCase as TestCase;
 use PhpSocks\Buffer;

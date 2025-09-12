@@ -10,15 +10,15 @@
  */
 declare(strict_types=1);
 
-namespace PhpSocks\Tests\Proto;
+namespace PhpSocks\Tests\Unit\Proto;
 
 use Mockery;
-use PhpSocks\Exception\PhpSocksException;
-use PhpSocks\Proto\UsernamePasswordAuth;
-use PhpSocks\Stream;
 use Mockery\Adapter\Phpunit\MockeryTestCase as TestCase;
+use PhpSocks\Exception\PhpSocksException;
+use PhpSocks\Proto\Connect;
+use PhpSocks\Stream;
 
-final class UsernamePasswordAuthTest extends TestCase
+final class ConnectTest extends TestCase
 {
     /**
      * @test
@@ -26,11 +26,11 @@ final class UsernamePasswordAuthTest extends TestCase
     public function sendsRequest(): void
     {
         $stream = Mockery::spy(Stream::class)->makePartial();
-        UsernamePasswordAuth::send($stream, 'username', 'password');
+        Connect::send($stream);
         $stream
             ->shouldHaveReceived('write')
             ->once()
-            ->with("\x01\x08username\x08password");
+            ->with("\x05\x01\x00");
     }
 
     /**
@@ -42,25 +42,8 @@ final class UsernamePasswordAuthTest extends TestCase
         $stream->shouldReceive('read')
             ->once()
             ->with(2)
-            ->andReturn("\x01\x00");
-        UsernamePasswordAuth::receive($stream);
-    }
-
-    /**
-     * @test
-     */
-    public function receivesAuthFailedResponse(): void
-    {
-        $this->expectException(PhpSocksException::class);
-        $this->expectExceptionMessage('UsernamePasswordAuth failed');
-
-        $stream = Mockery::mock(Stream::class)->makePartial();
-        $stream->shouldReceive('read')
-            ->once()
-            ->with(2)
-            ->andReturn("\x01\x09");
-
-        UsernamePasswordAuth::receive($stream);
+            ->andReturn("\x05\x00");
+        Connect::receive($stream);
     }
 
     /**
@@ -75,8 +58,42 @@ final class UsernamePasswordAuthTest extends TestCase
         $stream->shouldReceive('read')
             ->once()
             ->with(2)
-            ->andReturn("\x05\x00");
+            ->andReturn("\x03\x00");
 
-        UsernamePasswordAuth::receive($stream);
+        Connect::receive($stream);
+    }
+
+    /**
+     * @test
+     */
+    public function receivesNoAcceptableMethodsResponse(): void
+    {
+        $this->expectException(PhpSocksException::class);
+        $this->expectExceptionMessage('No acceptable methods');
+
+        $stream = Mockery::mock(Stream::class)->makePartial();
+        $stream->shouldReceive('read')
+            ->once()
+            ->with(2)
+            ->andReturn("\x05\xFF");
+
+        Connect::receive($stream);
+    }
+
+    /**
+     * @test
+     */
+    public function receivesResponseWithUnexpectedAuthMethod(): void
+    {
+        $this->expectException(PhpSocksException::class);
+        $this->expectExceptionMessage('Unexpected auth method: expected "0", got "2"');
+
+        $stream = Mockery::mock(Stream::class)->makePartial();
+        $stream->shouldReceive('read')
+            ->once()
+            ->with(2)
+            ->andReturn("\x05\x02");
+
+        Connect::receive($stream);
     }
 }

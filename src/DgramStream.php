@@ -21,7 +21,7 @@ use PhpSocks\Proto\Dgram;
 final class DgramStream implements Stream
 {
     /**
-     * @var resource|closed-resource
+     * @var mixed|null $sock
      */
     private $sock;
     private TcpStream $controlStream;
@@ -31,7 +31,7 @@ final class DgramStream implements Stream
     private int $dstPort;
 
     /**
-     * @param resource|closed-resource $sock
+     * @param mixed $sock
      */
     private function __construct($sock, TcpStream $controlStream, string $bndAddr, int $bndPort, string $dstAddr, int $dstPort)
     {
@@ -75,12 +75,13 @@ final class DgramStream implements Stream
      */
     public function read(int $length): string
     {
-        if (!is_resource($this->sock)) {
-            throw new PhpSocksException('Socket is closed or inoperable.');
+        if (is_null($this->sock)) {
+            throw new PhpSocksException('Socket is inoperable.');
         }
         if ($this->controlStream->eof()) {
             throw new PhpSocksException('Failed to read from the stream: the control connection is closed.');
         }
+        /** @psalm-suppress MixedArgument */
         $bytesReceived = socket_recvfrom($this->sock, $reply, Dgram::MAX_HEADER_LENGTH + $length, 0, $from_, $port_);
         if ($bytesReceived === false) {
             throw new PhpSocksException('Failed to read from the stream: ' . socket_strerror(socket_last_error()));
@@ -93,8 +94,8 @@ final class DgramStream implements Stream
      */
     public function write(string $data): int
     {
-        if (!is_resource($this->sock)) {
-            throw new PhpSocksException('Socket is closed or inoperable.');
+        if (is_null($this->sock)) {
+            throw new PhpSocksException('Socket is inoperable.');
         }
         if ($this->controlStream->eof()) {
             throw new PhpSocksException('Failed to write to the stream: the control connection is closed.');
@@ -102,6 +103,7 @@ final class DgramStream implements Stream
         $buf = Dgram::prep($this->dstAddr, $this->dstPort, $data);
         $headerSize = $buf->getSize() - strlen($data);
         $dgram = $buf->flush();
+        /** @psalm-suppress MixedArgument */
         $sent = socket_sendto($this->sock, $dgram, strlen($dgram), 0, $this->bndAddr, $this->bndPort);
         if ($sent === false) {
             throw new PhpSocksException('Failed to write to the stream: ' . socket_strerror(socket_last_error()));
@@ -114,9 +116,11 @@ final class DgramStream implements Stream
      */
     public function close(): void
     {
-        if (is_resource($this->sock)) {
-            fclose($this->sock);
-        }
-        $this->controlStream->close();
+        if (!is_null($this->sock)) {
+            /** @psalm-suppress MixedArgument */
+            socket_close($this->sock);
+            $this->sock = null;
+            $this->controlStream->close();
+        };
     }
 }
